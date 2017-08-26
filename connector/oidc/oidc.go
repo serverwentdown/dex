@@ -189,6 +189,7 @@ func (c *oidcConnector) HandleCallback(s connector.Scopes, r *http.Request) (ide
 		Username      string `json:"name"`
 		Email         string `json:"email"`
 		EmailVerified bool   `json:"email_verified"`
+		PreferredUsername string `json:"preferred_username"`
 		HostedDomain  string `json:"hd"`
 	}
 	if err := idToken.Claims(&claims); err != nil {
@@ -207,6 +208,10 @@ func (c *oidcConnector) HandleCallback(s connector.Scopes, r *http.Request) (ide
 		if !found {
 			return identity, fmt.Errorf("oidc: unexpected hd claim %v", claims.HostedDomain)
 		}
+	}
+	
+	if len(claims.PreferredUsername) > 0 && len(claims.Email) == 0 {
+		claims.Email = claims.PreferredUsername
 	}
 
 	identity = connector.Identity{
